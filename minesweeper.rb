@@ -152,7 +152,7 @@ class Board
         counter += bombs
         dist << bombs
       else
-        dist << 0
+        dist << @bombs - counter
       end
     end
     dist.shuffle
