@@ -33,10 +33,19 @@ class Game
   def new_game
     @board = Board.new
     until win?
-      input = @player.input
+      input = @player.game_input # 3, 6, r/f => [[x, y], :action]
+      @board.update(input)
+      @board.display
+    end
+  end
+
+  def win?
 
   end
 
+  def lose?
+
+  end
 
 end # end Game class
 
@@ -53,7 +62,7 @@ class Board
     bombs_counter = 0
     dist = bombs_by_row
     @board.each_index do |index|
-      @board[index] = bombs_in_row(dist[index])
+      @board[index] = Tile.new(bombs_in_row(dist[index]))
     end
   end
 
@@ -86,10 +95,78 @@ class Board
     dist.shuffle
   end
 
+  def update(input)
+
+  end
+
+  def display
+    @board.each do |row|
+      row.each do |tile|
+        tile.display
+      end
+      puts
+    end
+  end
+
+  def num_tile
+
+  end
+
 
 end #end Board class
 
+class Tile
+  @@converter = {
+    :bomb => "[*]",
+    :flag => "[!]",
+    :revealed_empty => "[-]",
+    :blank => "[ ]"
+  }
 
+  def initialize(bomb, number = nil)
+    @bomb = bomb
+    @revealed = false
+    @flag = false
+    @number = number
+  end
+
+
+  ## STATES
+  # not revealed
+    # empty/bomb
+    # flag
+  # revealed
+    # bomb
+    # number
+    # empty
+
+  def render_tile
+    if @revealed
+      if @bomb
+        @@converter[:bomb]
+      elsif @number
+        "[#{@number}]"
+      else
+        @@converter[:revealed_empty]
+      end
+    else
+      if @flag
+        @@converter[:flag]
+      else
+        @@converter[:blank]
+      end
+    end
+  end
+
+  def reveal
+    @revealed = true
+  end
+
+  def flag
+    @flag = true
+  end
+
+end # end Tile class
 
 # board
 # init(size, bombs = set)
@@ -119,6 +196,10 @@ class Player < Game
   end
 
   def display_mainui
+
+  end
+
+  def game_input
 
   end
 end
