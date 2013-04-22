@@ -108,14 +108,33 @@ class Board
     end
   end
 
-  def num_tile
+  def num_tile(x, y)
+    edges = [
+      [x + 1, y],
+      [x - 1, y],
+      [x + 1, y + 1],
+      [x + 1, y - 1],
+      [x - 1, y + 1],
+      [x - 1, y - 1],
+      [x, y + 1],
+      [x, y -1]
+    ]
 
+    edges.select! { |edge| edge[0].between?(0,9) && edge[1].between?(0,9) }
+    bombs_count = 0
+    edges.each do |edge|
+      if @board[edge[0]][[edge[1]].bomb
+        bombs_count += 1
+      end
+    end
+
+    bombs_count
   end
 
   def set_tile_num
-    @board.each do |row|
-      row.each do |tile|
-        tile.number = num_tile
+    @board.each_with_index do |row, x|
+      row.each do |tile, y|
+        tile.number = num_tile(x,y)
       end
     end
   end
@@ -123,7 +142,7 @@ class Board
 end #end Board class
 
 class Tile
-  attr_accessor :num
+  attr_accessor :num, :bomb
 
   @@converter = {
     :bomb => "[*]",
