@@ -44,18 +44,16 @@ class Board
 
   def initialize(size, bombs = 10)
     @size = size
-   @bombs = bombs
-   @board = Array.new(size) {[]}
-   @ratio = size*size / bombs
+    @bombs = bombs
+    set_board
   end
 
   def set_board
+    @board = Array.new(size) {[]}
     bombs_counter = 0
-    @board.each do |row|
-
-      row.each do |tile|
-
-      end
+    dist = bombs_by_row
+    @board.each_index do |index|
+      @board[index] = bombs_in_row(dist[index])
     end
   end
 
@@ -79,7 +77,7 @@ class Board
     dist.shuffle
   end
 
-  def bombs_in_rows(total)
+  def bombs_in_row(total)
     counter = 0
     dist = Array.new(9) {false}
     for i in 0...total
