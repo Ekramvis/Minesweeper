@@ -58,12 +58,27 @@ class Board
   end
 
   def set_board
-    @board = Array.new(size) {[]}
+    @board = Array.new(@size) {[]}
     bombs_counter = 0
-    dist = bombs_by_row
-    @board.each_index do |index|
-      @board[index] = Tile.new(bombs_in_row(dist[index]))
+    dist = distribution
+
+
+    @board.each_index do |i|
+      @board[i].each_index do |j|
+        @board[i][j] = Tile.new(bombs_in_row(dist[i][j]))
+      end
     end
+  end
+
+  def distribution
+    total_array = bombs_by_row
+    res = Array.new(@size) {[]}
+
+    res.each_with_index do |row, i|
+      row << bombs_in_row(total_array[i])
+    end
+
+    res
   end
 
   def bombs_by_row
@@ -123,7 +138,7 @@ class Board
     edges.select! { |edge| edge[0].between?(0,9) && edge[1].between?(0,9) }
     bombs_count = 0
     edges.each do |edge|
-      if @board[edge[0]][[edge[1]].bomb
+      if @board[edge[0]][edge[1]].bomb
         bombs_count += 1
       end
     end
