@@ -17,7 +17,7 @@ class Game
       when 'quit' then break
       when 'scores' then load_scores
       when 'load' then load_game
-      when 'new' then new_game
+      when 'new' then new_game(9, 10)
       else
         puts 'Not valid input'
       end
@@ -32,8 +32,8 @@ class Game
 
   end
 
-  def new_game
-    @board = Board.new
+  def new_game(size, bombs)
+    @board = Board.new(size, bombs)
     @board.display
 
     until lose? || win?
