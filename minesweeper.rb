@@ -112,10 +112,19 @@ class Board
 
   end
 
+  def set_tile_num
+    @board.each do |row|
+      row.each do |tile|
+        tile.number = num_tile
+      end
+    end
+  end
 
 end #end Board class
 
 class Tile
+  attr_accessor :num
+
   @@converter = {
     :bomb => "[*]",
     :flag => "[!]",
@@ -123,24 +132,14 @@ class Tile
     :blank => "[ ]"
   }
 
-  def initialize(bomb, number = nil)
+  def initialize(bomb)
     @bomb = bomb
     @revealed = false
     @flag = false
-    @number = number
+    @num = nil
   end
 
-
-  ## STATES
-  # not revealed
-    # empty/bomb
-    # flag
-  # revealed
-    # bomb
-    # number
-    # empty
-
-  def render_tile
+  def render
     if @revealed
       if @bomb
         @@converter[:bomb]
