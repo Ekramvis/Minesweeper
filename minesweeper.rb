@@ -3,10 +3,10 @@ require 'yaml.rb'
 
 class Game
 
-  def intialize
+  def initialize
     @player = Player.new # create new player object, run main ui
-    @oldgame = yaml::load('./save.yaml') # assumes this works
-    @scores = yaml::load('./scores.yaml')
+    #@oldgame = yaml::load('./save.yaml') # assumes this works
+    #@scores = yaml::load('./scores.yaml')
   end
 
   def game_loop
@@ -17,7 +17,7 @@ class Game
       when 'quit' then break
       when 'scores' then load_scores
       when 'load' then load_game
-      when 'new' then new_game(9, 10)
+      when 'new' then new_game(5, 5)
       else
         puts 'Not valid input'
       end
@@ -41,10 +41,9 @@ class Game
       @board.update(input)
       @board.display
     end
-
+    puts win? ? "You won!" : "You lose!"
     @board.reveal_all
     @board.display
-    puts win? ? "You won!" : "You lose!"
   end
 
   def win?
@@ -59,7 +58,7 @@ end # end Game class
 
 
 class Tile
-  attr_accessor :num, :bomb
+  attr_accessor :num, :bomb, :coords
   attr_reader :revealed
 
   @@converter = {
@@ -69,11 +68,12 @@ class Tile
     :blank => "[ ]"
   }
 
-  def initialize(bomb)
+  def initialize(bomb, coords)
     @bomb = bomb
     @revealed = false
     @flag = false
     @num = nil
+    @coords = coords
   end
 
   def render
@@ -116,7 +116,6 @@ class Board
     @bombs = bombs
     set_board
     set_tile_num
-    @revealed_tiles = 0
   end
 
   def set_board
@@ -129,23 +128,20 @@ class Board
 
     @board.each_index do |i|
       @board[i].each_index do |j|
-        @board[i][j] = Tile.new(dist[i][j])
+        @board[i][j] = Tile.new(dist[i][j],[i,j])
       end
     end
   end
 
   def distribution
     total_array = bombs_by_row
-    puts "Bombs by row: #{total_array}"
     res = Array.new(@size) { Array.new(@size) { nil } }
 
     res.each_index do |i|
       row = bombs_in_row(total_array[i])
-      puts "Total array[#{i}]:  #{total_array[i]} "
       row.each_index do |j|
         res[i][j] = row[j]
       end
-      puts "Row: #{row}"
     end
 
     res
@@ -181,14 +177,52 @@ class Board
   end
 
   def update(input)
-    if input[2] == 'r'
-      @revealed_tiles += 1
-      @board[input[0]][input[1]].reveal
-    elsif input[2] == 'f'
-      @board[input[0]][input[1]].flag
-    elsif input[2] == 'u'
-      @board[input[0]][input[1]].unflag
+    x = input[0].to_i
+    y = input[1].to_i
+    action = input[2]
+    if action == 'r'
+      @board[x][y].reveal
+    elsif action == 'f'
+      @board[x][y].flag
+    elsif action == 'u'
+      @board[x][y].unflag
     end
+
+    reveal_fringe(board[x][y])
+  end
+
+  def reveal_fringe(tile)
+    fringe = [tile]
+    checked = []
+    until fringe.empty?
+      test = fringe.shift
+      checked << test
+      if test.num
+        test.reveal
+      elsif !test.bomb
+        test.reveal
+        children = spawn(test.coords[0], test.coords[1])
+        children.each do |pair|
+          fringe << @board[pair[0]][pair[1]] unless checked.include?(@board[pair[0]][pair[1]])
+        end
+      end
+    end
+  end
+
+  def spawn(x, y)
+
+    edges = [
+      [x + 1, y],
+      [x - 1, y],
+      [x + 1, y + 1],
+      [x + 1, y - 1],
+      [x - 1, y + 1],
+      [x - 1, y - 1],
+      [x, y + 1],
+      [x, y -1]
+    ]
+    res = edges.select { |edge| edge if (edge[0].between?(0,@size-1) && edge[1].between?(0,@size-1)) }
+    res
   end
 
   def display
@@ -227,9 +261,9 @@ class Board
   def set_tile_num
     @board.each_with_index do |row, x|
       row.each_with_index do |tile, y|
-        puts "x is #{x}"
-        puts "y is #{y}"
-        tile.num = num_tile(x,y)
+        if num_tile(x,y) > 0
+          tile.num = num_tile(x,y)
+        end
       end
     end
   end
@@ -243,8 +277,15 @@ class Board
   end
 
   def check_win
-    if !check_lose && @revealed_tiles == (@size**2 - @bombs)
-      true
+    revealed = 0
+    @board.each do |row|
+      row.each do |tile|
+        revealed += 1 if tile.revealed
+      end
+    end
+
+    unless check_lose
+      true if @size**2 - @bombs == revealed
     else
       false
     end
@@ -262,10 +303,10 @@ class Board
 
 end #end Board class
 
-class Player < Game
+class Player
 
   def initialize
-    display_mainui
+
   end
 
   def display_mainui
@@ -274,7 +315,8 @@ class Player < Game
 
   def game_input
     puts "Enter two coordinates, and action separated by commas (x,y,f/r/u)"
-    gets.chomp.split(",")
+    input = gets.chomp
+    input = input.split(",")
+    input
   end
 end
-
