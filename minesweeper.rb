@@ -53,6 +53,7 @@ end # end Game class
 
 class Tile
   attr_accessor :num, :bomb
+  attr_reader :revealed
 
   @@converter = {
     :bomb => "[*]",
@@ -94,6 +95,9 @@ class Tile
     @flag = true
   end
 
+  def unflag
+    @flag = false
+  end
 end # end Tile class
 
 class Board
@@ -169,7 +173,13 @@ class Board
   end
 
   def update(input)
-
+    if input[2] == 'r'
+      @board[input[0]][input[1]].reveal
+    elsif input[2] == 'f'
+      @board[input[0]][input[1]].flag
+    elsif input[2] == 'u'
+      @board[input[0]][input[1]].unflag
+    end
   end
 
   def display
@@ -179,6 +189,7 @@ class Board
       end
       puts
     end
+    nil
   end
 
   def num_tile(x, y)
@@ -222,29 +233,20 @@ class Board
     end
   end
 
+  def check_win
+
+  end
+
+  def check_lose
+    lose = false
+    @board.each do |row|
+      row.each do |tile|
+        lose = true if tile.bomb == true && tile.revealed == true
+      end
+    end
+  end
+
 end #end Board class
-
-
-# board
-# init(size, bombs = set)
-#   2-d array of tile objects
-#   #bombs
-#   #time --> now
-#
-# tiles
-# bomb / empty
-# revealed / not revealved
-# flagged / not flagged
-#
-# #timestamp
-# timenow - init time
-#
-# #display
-# current state
-
-
-
-
 
 class Player < Game
 
@@ -257,52 +259,8 @@ class Player < Game
   end
 
   def game_input
-
+    puts "Enter two coordinates, and action separated by commas (x,y,f/r/u)"
+    gets.chomp.split(",")
   end
 end
 
-#
-# game class
-# stores: board, scores
-#
-# #play loop
-#
-# loop until win or bomb hit
-# displays board state
-# takes input from player
-# updates board
-# -----
-# display final board
-#
-#
-# Player class
-# main ui
-#   load
-#   - load up board, runs game loop
-#   run(new)
-#   - create new board object(size), start game loop
-#   scores
-#   - stored within game file
-#
-# game ui
-# #display board
-# #take input
-#
-#
-# ---------
-# board
-# init(size, bombs = set)
-#   2-d array of tile objects
-#   #bombs
-#   #time --> now
-#
-# tiles
-# bomb / empty
-# revealed / not revealved
-# flagged / not flagged
-#
-# #timestamp
-# timenow - init time
-#
-# #display
-# current state
