@@ -162,8 +162,8 @@ class Tile
     if @revealed
       if @bomb
         @@converter[:bomb]
-      elsif @number
-        "[#{@number}]"
+      elsif @num
+        "[#{@num}]"
       else
         @@converter[:revealed_empty]
       end
