@@ -21,6 +21,7 @@ class Game
       else
         puts 'Not valid input'
       end
+    end
   end
 
   def load_scores
@@ -33,19 +34,25 @@ class Game
 
   def new_game
     @board = Board.new
-    until win?
+    @board.display
+
+    until lose? || win?
       input = @player.game_input # 3, 6, r/f => [[x, y], :action]
       @board.update(input)
       @board.display
     end
+
+    @board.reveal_all
+    @board.display
+    puts win? ? "You won!" : "You lose!"
   end
 
   def win?
-
+    @board.check_win
   end
 
   def lose?
-
+    @board.check_lose
   end
 
 end # end Game class
@@ -88,7 +95,7 @@ class Tile
   end
 
   def reveal
-    @revealed = true
+    @revealed = true unless @flag
   end
 
   def flag
@@ -109,6 +116,7 @@ class Board
     @bombs = bombs
     set_board
     set_tile_num
+    @revealed_tiles = 0
   end
 
   def set_board
@@ -174,6 +182,7 @@ class Board
 
   def update(input)
     if input[2] == 'r'
+      @revealed_tiles += 1
       @board[input[0]][input[1]].reveal
     elsif input[2] == 'f'
       @board[input[0]][input[1]].flag
@@ -234,7 +243,11 @@ class Board
   end
 
   def check_win
-
+    if !check_lose && @revealed_tiles == (@size**2 - @bombs)
+      true
+    else
+      false
+    end
   end
 
   def check_lose
@@ -244,6 +257,7 @@ class Board
         lose = true if tile.bomb == true && tile.revealed == true
       end
     end
+    lose
   end
 
 end #end Board class
