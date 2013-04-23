@@ -11,11 +11,12 @@ class Game
 
   def game_loop
     while true
-      puts "New Game/Load Game/Scores/Quit"
+      puts "New Game | Load Game | Save Game | Scores | Quit"
       input = gets.chomp
       case input
       when 'quit' then break
       when 'scores' then load_scores
+      when 'save' then save_game
       when 'load' then load_game
       when 'new' then new_game(5, 5)
       else
@@ -28,12 +29,34 @@ class Game
 
   end
 
-  def load_game
+  def save_game
+    File.new("save", "w") do |f|
+      f.puts @board.to_yaml
+    end
+  end
 
+  def load_game
+    if File.exists?('./save.yaml')
+      @board = YAML::load( File.read('./save.yaml') )
+      old_game
+    end
   end
 
   def new_game(size, bombs)
     @board = Board.new(size, bombs)
+    @board.display
+
+    until lose? || win?
+      input = @player.game_input # 3, 6, r/f => [[x, y], :action]
+      @board.update(input)
+      @board.display
+    end
+    puts win? ? "You won!" : "You lose!"
+    @board.reveal_all
+    @board.display
+  end
+
+  def old_game
     @board.display
 
     until lose? || win?
@@ -314,9 +337,13 @@ class Player
   end
 
   def game_input
-    puts "Enter two coordinates, and action separated by commas (x,y,f/r/u)"
+    puts "Enter two coordinates, and action separated by commas (x,y,f/r/u), or 'quit'."
     input = gets.chomp
-    input = input.split(",")
+    if input == 'quit'
+      input = ['quit',nil,nil]
+    else
+      input = input.split(",")
+    end
     input
   end
 end
