@@ -4,13 +4,18 @@ require 'yaml.rb'
 class Game
 
   def initialize
-    @player = Player.new # create new player object, run main ui
-    #@oldgame = yaml::load('./save.yaml') # assumes this works
-    #@scores = yaml::load('./scores.yaml')
+    @player = Player.new
+    if File.exists?('score')
+      @score = YAML::load( File.read('score') )
+    else
+      @top_score = 0
+    end
+    game_loop
   end
 
   def game_loop
     while true
+      puts ""
       puts "New Game | Load Game | Save Game | Scores | Quit"
       input = gets.chomp
       case input
@@ -23,21 +28,23 @@ class Game
         puts 'Not valid input'
       end
     end
+    puts ""
+    puts "Goodbye!"
   end
 
   def load_scores
-
+    puts "Top score is #{@top_score}"
   end
 
   def save_game
-    File.new("save", "w") do |f|
+    File.open("save", "w") do |f|
       f.puts @board.to_yaml
     end
   end
 
   def load_game
-    if File.exists?('./save.yaml')
-      @board = YAML::load( File.read('./save.yaml') )
+    if File.exists?('save')
+      @board = YAML::load( File.read('save') )
       old_game
     end
   end
@@ -48,10 +55,21 @@ class Game
 
     until lose? || win?
       input = @player.game_input # 3, 6, r/f => [[x, y], :action]
+      if input[0] == "quit"
+        return puts "You have exited the game."
+      end
       @board.update(input)
       @board.display
+      puts ""
     end
     puts win? ? "You won!" : "You lose!"
+
+    if win? && @board.time < @topscore
+      File.open("score", "w") do |f|
+        f.puts @topscore.to_yaml
+      end
+    end
+
     @board.reveal_all
     @board.display
   end
@@ -61,6 +79,9 @@ class Game
 
     until lose? || win?
       input = @player.game_input # 3, 6, r/f => [[x, y], :action]
+      if input[0] == "quit"
+        return puts "You have exited the game."
+      end
       @board.update(input)
       @board.display
     end
@@ -130,24 +151,29 @@ class Tile
   end
 end # end Tile class
 
+
+
+
 class Board
-  # fix bombs_by_row
-  attr_reader :board
+  attr_reader :board, :time
 
   def initialize(size, bombs = 10)
     @size = size
     @bombs = bombs
     set_board
     set_tile_num
+    @start_time = Time.now.to_i
+    @time = @start_time
+  end
+
+  def time_stamp
+    @time = Time.now.to_i - @start_time
   end
 
   def set_board
-
     @board = Array.new(@size) { Array.new(@size) { nil } }
     bombs_counter = 0
     dist = distribution
-
-
 
     @board.each_index do |i|
       @board[i].each_index do |j|
@@ -202,17 +228,23 @@ class Board
   def update(input)
     x = input[0].to_i
     y = input[1].to_i
-    action = input[2]
+
+    if input[2].nil?
+      action = 'r'
+    else
+      action = input[2]
+    end
+
     if action == 'r'
       @board[x][y].reveal
+      reveal_fringe(board[x][y])
     elsif action == 'f'
       @board[x][y].flag
     elsif action == 'u'
       @board[x][y].unflag
     end
-
-    reveal_fringe(board[x][y])
   end
+
 
   def reveal_fringe(tile)
     fringe = [tile]
@@ -249,6 +281,11 @@ class Board
   end
 
   def display
+    time_stamp
+    puts ""
+    puts "Clock: #{@time} seconds"
+    puts ""
+
     @board.each do |row|
       row.each do |tile|
         print tile.render + " "
