@@ -6,9 +6,9 @@ class Game
   def initialize
     @player = Player.new
     if File.exists?('score')
-      @score = YAML::load( File.read('score') )
+      @top_score = YAML::load( File.read('score') )
     else
-      @top_score = 0
+      @top_score = nil
     end
     game_loop
   end
@@ -23,7 +23,7 @@ class Game
       when 'scores' then load_scores
       when 'save' then save_game
       when 'load' then load_game
-      when 'new' then new_game(5, 5)
+      when 'new' then new_game(5, 2)
       else
         puts 'Not valid input'
       end
@@ -64,9 +64,15 @@ class Game
     end
     puts win? ? "You won!" : "You lose!"
 
-    if win? && @board.time < @topscore
+    if @top_score.nil? && win?
       File.open("score", "w") do |f|
-        f.puts @topscore.to_yaml
+        f.puts @board.time.to_yaml
+      end
+    elsif !@top_score.nil?
+      if (@board.time < @top_score) && win?
+        File.open("score", "w") do |f|
+          f.puts @board.time.to_yaml
+        end
       end
     end
 
